@@ -1,0 +1,6 @@
+image: electronshepherds/chisel:latest
+
+build:
+  stage: build
+  script:
+    - sbt test

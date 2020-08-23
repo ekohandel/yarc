@@ -1,0 +1,25 @@
+// For format details, see https://aka.ms/vscode-remote/devcontainer.json or this file's README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.128.0/containers/debian
+{
+	"name": "yarc",
+	"image": "electronshepherds/chisel-dev",
+	"runArgs": [
+		"--rm",
+		"--name=yarc",
+	],
+	"remoteEnv": {
+		// replace this with the host IP address
+		"DISPLAY": "192.168.1.79:0"
+	},
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"mshr-h.veriloghdl",
+		"scalameta.metals"
+	]
+}
