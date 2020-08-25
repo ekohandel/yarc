@@ -1,3 +1,5 @@
+// See LICENSE for license details.
+
 package yarc
 
 import chisel3._
@@ -7,14 +9,15 @@ class InstDecoder extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(32.W))
     val opcode = Output(UInt(7.W))
-    val rd = Output(UInt(4.W))
-    val rs1 = Output(UInt(4.W))
-    val rs2 = Output(UInt(4.W))
-    val shamt = Output(UInt(4.W))
+    val rd = Output(UInt(5.W))
+    val rs1 = Output(UInt(5.W))
+    val rs2 = Output(UInt(5.W))
+    val shamt = Output(UInt(5.W))
     val funct3 = Output(UInt(3.W))
     val funct7 = Output(UInt(7.W))
-    val aluOp = Output(UInt(4.W))
+    val intOp = Output(UInt(4.W))
     val imm = Output(UInt(32.W))
+    val valid = Output(Bool())
   })
 
   val rType :: iType :: sType :: bType :: uType :: jType :: undefType :: Nil =
@@ -49,56 +52,93 @@ class InstDecoder extends Module {
   io.imm := 0.U(32.W)
   switch(GetInstEncoding(io.opcode)) {
     is(iType) {
-      io.imm := Fill(21, io.inst(31)) ## io.inst(30, 25) ## io.inst(
-        24,
-        21
-      ) ## io.inst(20, 20)
+      io.imm := Fill(21, io.inst(31)) ## io.inst(30, 20)
     }
     is(sType) {
-      io.imm := Fill(21, io.inst(31)) ## io.inst(30, 25) ## io.inst(11, 8) ## io
-        .inst(7, 7)
+      io.imm := Fill(21, io.inst(31)) ## io.inst(30, 25) ## io.inst(11, 8) ## io.inst(7)
     }
     is(bType) {
-      io.imm := Fill(20, io.inst(31)) ## io.inst(7, 7) ## io.inst(30, 25) ## io
-        .inst(11, 8) ## 0.U(1.W)
+      io.imm := Fill(20, io.inst(31)) ## io.inst(7) ## io.inst(30, 25) ## io.inst(11, 8) ## 0.U(1.W)
     }
     is(uType) {
-      io.imm := io.inst(31, 31) ## io.inst(30, 20) ## io.inst(19, 12) ## Fill(
-        12,
-        0.U
-      )
+      io.imm := io.inst(31, 12) ## Fill(12, 0.U)
     }
     is(jType) {
-      io.imm := Fill(12, io.inst(31)) ## io.inst(19, 12) ## io.inst(20) ## io
-        .inst(30, 25) ## io.inst(24, 21) ## 0.U(1.W)
+      io.imm := Fill(12, io.inst(31)) ## io.inst(19, 12) ## io.inst(20) ## io.inst(30, 21) ## 0.U(1.W)
     }
   }
 
-  io.aluOp := 0.U(4.W)
-  switch(io.funct3) {
-    is("b000".U) {
-      io.aluOp := Mux(io.funct7(5), IntOp.SUB, IntOp.ADD)
+  io.intOp := 0.U(1.W) ## io.funct3
+  switch(io.opcode) {
+    is(Opcode.OP_IMM) {
+      switch(io.funct3) {
+        is(IntOpFunct3.SR) { io.intOp := io.funct7(5) ## io.funct3 }
+        is(IntOpFunct3.SLL) { io.intOp := io.funct7(5) ## io.funct3 }
+      }
     }
-    is("b001".U) {
-      io.aluOp := IntOp.SLL
+    is(Opcode.OP) { io.intOp := io.funct7(5) ## io.funct3 }
+  }
+
+  io.valid := false.B
+  switch(io.opcode) {
+    is(Opcode.LUI) { io.valid := true.B }
+    is(Opcode.AUIPC) { io.valid := true.B }
+    is(Opcode.JAL) { io.valid := true.B }
+    is(Opcode.JALR) {
+      switch(io.funct3) { is("b000".U) { io.valid := true.B } }
     }
-    is("b010".U) {
-      io.aluOp := IntOp.SLT
+    is(Opcode.BRANCH) {
+      switch(io.funct3) {
+        is(Branch.EQ) { io.valid := true.B }
+        is(Branch.NE) { io.valid := true.B }
+        is(Branch.LT) { io.valid := true.B }
+        is(Branch.GE) { io.valid := true.B }
+        is(Branch.LTU) { io.valid := true.B }
+        is(Branch.GEU) { io.valid := true.B }
+      }
     }
-    is("b011".U) {
-      io.aluOp := IntOp.SLTU
+    is(Opcode.LOAD) {
+      switch(io.funct3) {
+        is(Load.B) { io.valid := true.B }
+        is(Load.H) { io.valid := true.B }
+        is(Load.W) { io.valid := true.B }
+        is(Load.BU) { io.valid := true.B }
+        is(Load.HU) { io.valid := true.B }
+      }
     }
-    is("b100".U) {
-      io.aluOp := IntOp.XOR
+    is(Opcode.STORE) {
+      switch(io.funct3) {
+        is(Load.B) { io.valid := true.B }
+        is(Load.H) { io.valid := true.B }
+        is(Load.W) { io.valid := true.B }
+      }
     }
-    is("b101".U) {
-      io.aluOp := Mux(io.funct7(5), IntOp.SRA, IntOp.SRL)
+    is(Opcode.OP_IMM) {
+      switch(io.intOp) {
+        is(IntOp.ADD) { io.valid := true.B }
+        is(IntOp.SLL) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SLT) { io.valid := true.B }
+        is(IntOp.SLTU) { io.valid := true.B }
+        is(IntOp.XOR) { io.valid := true.B }
+        is(IntOp.SRL) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SRA) { io.valid := Mux(io.funct7 === "b0100000".U, true.B, false.B) }
+        is(IntOp.OR) { io.valid := true.B }
+        is(IntOp.AND) { io.valid := true.B }
+      }
     }
-    is("b110".U) {
-      io.aluOp := IntOp.OR
-    }
-    is("b111".U) {
-      io.aluOp := IntOp.AND
+    is(Opcode.OP) {
+      switch(io.intOp) {
+        is(IntOp.ADD) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SUB) { io.valid := Mux(io.funct7 === "b0100000".U, true.B, false.B) }
+        is(IntOp.SLL) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SLT) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SLTU) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.XOR) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SRL) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.SRA) { io.valid := Mux(io.funct7 === "b0100000".U, true.B, false.B) }
+        is(IntOp.OR) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+        is(IntOp.AND) { io.valid := Mux(io.funct7 === "b0000000".U, true.B, false.B) }
+      }
     }
   }
 }
