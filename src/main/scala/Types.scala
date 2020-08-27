@@ -1,3 +1,5 @@
+// See LICENSE for license details.
+
 package yarc
 
 import chisel3._
@@ -37,6 +39,17 @@ object Store {
   val B = "b000".U
   val H = "b001".U
   val W = "b010".U
+}
+
+object IntOpFunct3 {
+  val ADD_SUB = "b000".U
+  val SLL = "b001".U
+  val SLT = "b010".U
+  val SLTU = "b011".U
+  val XOR = "b100".U
+  val SR = "b101".U
+  val OR = "b110".U
+  val AND = "b111".U
 }
 
 object IntOp {

@@ -1,4 +1,4 @@
-image: electronshepherds/chisel:latest
+image: electronshepherds/chisel-minimal:latest
 
 build:
   stage: build

@@ -1,22 +1,15 @@
+// See LICENSE for license details.
+
 import chisel3.iotesters.PeekPokeTester
 import org.scalatest._
 import chisel3._
 import yarc._
 
 class AluTest extends FlatSpec with Matchers {
-  a[ChiselException] should be thrownBy {
-    chisel3.iotesters.Driver.execute(
-      Array("--target-dir", "target"),
-      () => new Alu(32, 3)
-    ) { c =>
-      new PeekPokeTester(c) {}
-    }
-  }
-
   "ADD" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0 = 0 ADD 0
@@ -49,7 +42,7 @@ class AluTest extends FlatSpec with Matchers {
   "SLL" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0x2 = 0x2 SLL 0x0
@@ -82,7 +75,7 @@ class AluTest extends FlatSpec with Matchers {
   "SLT" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0 = 2 SLT 0
@@ -121,7 +114,7 @@ class AluTest extends FlatSpec with Matchers {
   "SLTU" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0 = 2 SLT 0
@@ -161,7 +154,7 @@ class AluTest extends FlatSpec with Matchers {
   "XOR" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0x2 = 0x2 XOR 0x0
@@ -182,7 +175,7 @@ class AluTest extends FlatSpec with Matchers {
   "SRL" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0x2 = 0x2 SRL 0x0
@@ -209,7 +202,7 @@ class AluTest extends FlatSpec with Matchers {
   "OR" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0x2 = 0x2 OR 0x0
@@ -230,7 +223,7 @@ class AluTest extends FlatSpec with Matchers {
   "AND" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0x0 = 0x2 AND 0x0
@@ -251,7 +244,7 @@ class AluTest extends FlatSpec with Matchers {
   "SUB" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 0 = 0 SUB 0
@@ -278,7 +271,7 @@ class AluTest extends FlatSpec with Matchers {
   "SRA" should "pass" in {
     chisel3.iotesters.Driver.execute(
       Array("--target-dir", "target"),
-      () => new Alu(32, 4)
+      () => new Alu()
     ) { c =>
       new PeekPokeTester(c) {
         // 1 = 1 SRA 0
