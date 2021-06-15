@@ -1,6 +1,0 @@
-image: electronshepherds/chisel-minimal:latest
-
-build:
-  stage: build
-  script:
-    - sbt test
